@@ -54,9 +54,9 @@
 }
 
 - (instancetype)initOnView:(UIView *)view {
-    CGFloat width = view.bounds.size.width * 0.8;
+    CGFloat width = view.bounds.size.width * 0.7;
     CGFloat height = view.bounds.size.height * 0.8;
-    CGFloat x = view.bounds.size.width * 0.1;
+    CGFloat x = view.bounds.size.width * 0.15;
     CGFloat y = view.bounds.size.height * 0.1;
     CGRect rect = CGRectMake(x, y, width, height);
     self = [super initWithFrame:rect];
@@ -125,8 +125,7 @@
     [self.statusView addSubview:self.btnNextMonth];
     
     self.cvBackView = [[UIView alloc] init];
-    [self.cvBackView setBackgroundColor:[UIColor grayColor]];
-    
+    //[self.cvBackView setBackgroundColor:[UIColor grayColor]];
     
     CGFloat maxWidth = (view.frame.size.width > view.frame.size.height) ? view.frame.size.height : view.frame.size.width;
     self.cellWidth = maxWidth * 0.8 / 7;
@@ -177,12 +176,12 @@
     [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:view attribute:NSLayoutAttributeCenterX multiplier:1 constant:0]];
     [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:view attribute:NSLayoutAttributeCenterY multiplier:1 constant:0]];
     [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.maskView attribute:NSLayoutAttributeTop multiplier:1 constant:50]];
-    [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self.maskView attribute:NSLayoutAttributeLeading multiplier:1 constant:5]];
+    [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self.maskView attribute:NSLayoutAttributeLeading multiplier:1 constant:20]];
     
     [self addConstraint:[NSLayoutConstraint constraintWithItem:self.topView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeTop multiplier:1 constant:0]];
     [self addConstraint:[NSLayoutConstraint constraintWithItem:self.topView attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeLeading multiplier:1 constant:0]];
     [self addConstraint:[NSLayoutConstraint constraintWithItem:self.topView attribute:NSLayoutAttributeTrailing relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeTrailing multiplier:1 constant:0]];
-    [self addConstraint:[NSLayoutConstraint constraintWithItem:self.topView attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeHeight multiplier:0 constant:40]];
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:self.topView attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeHeight multiplier:0 constant:1]];
     
     [self addConstraint:[NSLayoutConstraint constraintWithItem:self.statusView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.topView attribute:NSLayoutAttributeBottom multiplier:1 constant:0]];
     [self addConstraint:[NSLayoutConstraint constraintWithItem:self.statusView attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeLeading multiplier:1 constant:0]];
@@ -261,8 +260,7 @@
     }];
 }
 
-- (void)addTap
-{
+- (void)addTap {
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hide)];
     [self.maskView addGestureRecognizer:tap];
 }
@@ -398,7 +396,7 @@
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     ECalendarPickerCollectionViewCell *cell = (ECalendarPickerCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
     if(indexPath.section == 1) {
-        NSLog(@"selected: %@", cell.labelText.text);
+        //NSLog(@"selected: %@", cell.labelText.text);
         if(cell.labelText.isEnabled) {
             self.selectedDay = cell.tag;
             [cell setBackgroundColor:self.titleBGColor];
@@ -431,6 +429,7 @@
     [cell.layer setCornerRadius:0];
     [cell setSelected:NO];
     [cell setHighlighted:NO];
+    [cell.labelText setEnabled:YES];
     if(indexPath.section == 0) {
         [cell setBackgroundColor:self.titleBGColor];
         [cell.labelText setTextColor:self.titleTextColor];
@@ -447,10 +446,13 @@
         [cell setBackgroundColor:[UIColor whiteColor]];
         NSInteger daysInThisMonth = [self totaldaysInMonth:_date];
         NSInteger firstWeekday = [self firstWeekdayInThisMonth:_date];
+        NSInteger dateOfToday = [self day:self.today];
         
         NSInteger day = 0;
         NSInteger i = indexPath.row;
         NSInteger dayOfWeek = i % 7;
+        [cell.labelText setEnabled:YES];
+        
         if(i < firstWeekday) {
             [cell.labelText setText:@""];
             [cell.labelText setEnabled:NO];
@@ -464,12 +466,25 @@
         }
         
         if(self.enableAllDay) {
-            
+            if(self.enablePastDay) {
+                [cell.labelText setEnabled:YES];
+            } else {
+                if([self.date isEqual:self.today]) {
+                    // today(the same month)
+                    if(dateOfToday > day) {
+                        // pass?
+                        [cell.labelText setEnabled:NO];
+                    }
+                } else if([self.today compare:self.date] == NSOrderedAscending) {
+                    // future
+                } else {
+                    // pass?
+                    [cell.labelText setEnabled:NO];
+                }
+            }
         } else {
-            [cell.labelText setEnabled:NO];
-            
             if(self.enableDayOfWeek && self.enableDayOfWeek.count > 0) {
-                
+                [cell.labelText setEnabled:NO];
                 if([self.enableDayOfWeek containsObject:[NSString stringWithFormat:@"%ld", dayOfWeek]]) {
                     [cell.labelText setEnabled:YES];
                 } else {
