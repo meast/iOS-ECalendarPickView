@@ -55,8 +55,10 @@
 
 - (instancetype)initOnView:(UIView *)view {
     CGFloat width = view.bounds.size.width * 0.7;
+    CGFloat width = view.bounds.size.width * 0.8;
     CGFloat height = view.bounds.size.height * 0.8;
     CGFloat x = view.bounds.size.width * 0.15;
+    CGFloat x = view.bounds.size.width * 0.1;
     CGFloat y = view.bounds.size.height * 0.1;
     CGRect rect = CGRectMake(x, y, width, height);
     self = [super initWithFrame:rect];
@@ -177,6 +179,7 @@
     [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:view attribute:NSLayoutAttributeCenterY multiplier:1 constant:0]];
     [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.maskView attribute:NSLayoutAttributeTop multiplier:1 constant:50]];
     [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self.maskView attribute:NSLayoutAttributeLeading multiplier:1 constant:20]];
+    [view addConstraint:[NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self.maskView attribute:NSLayoutAttributeLeading multiplier:1 constant:5]];
     
     [self addConstraint:[NSLayoutConstraint constraintWithItem:self.topView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeTop multiplier:1 constant:0]];
     [self addConstraint:[NSLayoutConstraint constraintWithItem:self.topView attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeLeading multiplier:1 constant:0]];
@@ -354,6 +357,23 @@
     return newDate;
 }
 
+-(BOOL)isFuture:(NSInteger)day {
+    NSInteger year = [self year:self.date];
+    NSInteger yearOfToday = [self year:self.today];
+    NSInteger month = [self month:self.date];
+    NSInteger monthOfToday = [self month:self.today];
+    NSInteger dayOfToday = [self day:self.today];
+    if(year > yearOfToday) { return YES; }
+    if(year == yearOfToday) {
+        if(month > monthOfToday) { return YES; }
+        if(month == monthOfToday) {
+            if(day > dayOfToday) { return YES; }
+        }
+    }
+    
+    return NO;
+}
+
 #pragma mark - collectionView delegate
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
@@ -486,12 +506,25 @@
             if(self.enableDayOfWeek && self.enableDayOfWeek.count > 0) {
                 [cell.labelText setEnabled:NO];
                 if([self.enableDayOfWeek containsObject:[NSString stringWithFormat:@"%ld", dayOfWeek]]) {
-                    [cell.labelText setEnabled:YES];
+                    if(!self.enablePastDay) {
+                        if([self isFuture:day]) {
+                            [cell.labelText setEnabled:YES];
+                        }
+                    } else {
+                        [cell.labelText setEnabled:YES];
+                    }
                 } else {
                     if(dayOfWeek == 7) {
                         if([self.enableDayOfWeek containsObject:@"0"]) {
                             if(cell.tag > 0) {
-                                [cell.labelText setEnabled:YES];
+                                if(!self.enablePastDay) {
+                                    if([self isFuture:day]) {
+                                        [cell.labelText setEnabled:YES];
+                                    }
+                                } else {
+                                    [cell.labelText setEnabled:YES];
+                                }
+                                //[cell.labelText setEnabled:YES];
                             }
                         }
                     }
